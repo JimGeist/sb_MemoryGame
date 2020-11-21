@@ -3,10 +3,10 @@
 // X  2. users can only change (see) two cards at a time
 // X  3. cards with matching classes are a match and remain face up (probably no
 //       longer clickable / remove the event from the div)
-// ?  4. the 2 non-matching cards remain visible for at least 1 second before the
+// X  4. the 2 non-matching cards remain visible for at least 1 second before the
 //       color is removed (use a setTimeout so code executes after one second)
 // X  5. Clicking the same card should not count as a match
-//    6. Make sure quick clicking of cards will not show more than 2 cards at a
+// X  6. Make sure quick clicking of cards will not show more than 2 cards at a
 //       time
 //    7. Add a button that when clicked will start the game
 //    8. Add a button that when clicked will restart the game once it has ended
@@ -19,6 +19,7 @@
 
 const gameContainer = document.getElementById("game");
 const gameScore = document.getElementById("score-yours");
+const gameButtons = document.getElementById("startOptions");
 
 const COLORS = [
   "red",
@@ -33,24 +34,27 @@ const COLORS = [
   "purple"
 ];
 
-// hold the score and first selections
-let gameCards = '';
-//let gameScore = '';
+// hold the scores, first selection, selection lock, and cards (divs)
+//  with removed event handlers.
+//let gameCards = '';
 let divSelectedFirst = '';
 let nbrOfMatches = 0;
 let nbrScoreYours = 0;
 let nbrScoreLow;
 let gameUnlocked = true;
+let divRemovedEvents = [];
 
 function gameReset() {
 
   // reset fields to prepare for a new game.
-  gameCards = document.querySelectorAll("div");
+  //gameCards = document.querySelectorAll("div");
   divSelectedFirst = '';
   nbrScoreYours = 0;
-  //gameScore = document.getElementById("score-yours");
+  nbrOfMatches = 0;
   gameScore.innerText = nbrScoreYours;
   gameUnlocked = true;
+  divRemovedEvents = [];
+
 }
 
 // here is a helper function to shuffle an array
@@ -112,11 +116,7 @@ function clearCardColor(inCard1, inCard2) {
 }
 
 
-// TODO: Implement this function!
 function handleCardClick(inEvt) {
-  // you can use event.target to see which element was clicked
-  console.log("you just clicked", inEvt.target);
-  //console.log(inEvt);
 
   // 1. clicking a card changes the background color to the color of its class
   // 2. users can only change (see) to cards at a time
@@ -125,8 +125,10 @@ function handleCardClick(inEvt) {
   // 4. the 2 non-matching cards remain visible for at least 1`second before the
   //  color is removed (use a setTimeout so code executes after one second)
 
+  // gameUnlocked is set to False when a match occurs. gameUnlockd is set back to 
+  //  true when the clearCardColor function runs after its 1 second timeout.
   if (gameUnlocked) {
-    // user can pick at most 2
+
     if (divSelectedFirst) {
       // truthy true
       // make sure card is not already selected by checking backGround color
@@ -152,20 +154,21 @@ function handleCardClick(inEvt) {
         // The assumption is that class will ONLY contain a color. 
         if (divSelectedFirst.classList[0] === inEvt.target.classList[0]) {
           // they match
-          console.log("match");
 
           // remove the click event from both divs to prevent them from
           //  use in the game.
           divSelectedFirst.removeEventListener("click", handleCardClick);
           inEvt.target.removeEventListener("click", handleCardClick);
+          divRemovedEvents.push(divSelectedFirst);
+          divRemovedEvents.push(inEvt.target);
 
           nbrOfMatches += 1;
 
           // Is the game over?
-          if (!((nbrOfMatches * 2) < COLORS.length)) {
+          if (!(divRemovedEvents.length < COLORS.length)) {
             // the game is over because the number of matches * 2 is equal to the 
             // number of colors.
-            console.log("game over");
+
             if (nbrScoreLow) {
               if (nbrScoreYours < nbrScoreLow) {
                 nbrScoreLow = nbrScoreYours
@@ -185,7 +188,6 @@ function handleCardClick(inEvt) {
 
         } else {
           // for now, no match, flip them back. We'll deal with delay later
-          console.log("no match");
 
           // lock the board so a new selection cannot happen until the two 
           //  cards just selected are cleared.
@@ -209,6 +211,45 @@ function handleCardClick(inEvt) {
     }
   }
 }
+
+// Restart Game button needs to clear any matches, add back in any removed
+//  event listeners to the div cards, and reset the score to 0
+// Start New Game button shuffles the colors and resets 
+gameButtons.addEventListener("click", function (inEvt) {
+
+  if (inEvt.target.innerText === "Start New Game") {
+    shuffledColors = shuffle(COLORS);
+    // delete the current board
+    gameContainer.innerHTML = "";
+    createDivsForColors(shuffledColors);
+    gameReset();
+  } else {
+    if (inEvt.target.innerText === "Restart Game") {
+      console.log(inEvt.target.innerText);
+      // Restart of game
+      // cards with the click event listener removed were
+      // remembered in divRemovedEvents. Use it to add back
+      // in the listeners.
+      for (let divReset of divRemovedEvents) {
+        divReset.addEventListener("click", handleCardClick);
+        divReset.style.backgroundColor = "";
+      }
+      gameReset();
+
+      // The score starts at the number of colors.
+      // Why? So you can't get all but 2 of the matches,
+      // restart the game, then complete it easily since
+      // the card locations were remembered. Of course,
+      // nothing is stopping a glance at the elements in 
+      // the developer tools.
+      nbrScoreYours = COLORS.length;
+      gameScore.innerText = nbrScoreYours;
+
+    }
+
+  }
+
+})
 
 // when the DOM loads
 document.addEventListener("DOMContentLoaded", function (inEvt) {
