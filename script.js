@@ -17,7 +17,7 @@
 //   12. Instead of hard-coding colors, try something different like random colors
 //       or images.
 // X 13. Remove use of style.backgroundColor for setting color
-//   14. Place the index to shuffledColors as a div class, not the actual
+// X 14. Place the index to shuffledColors as a div class, not the actual
 //       color name!
 
 const gameContainer = document.getElementById("game");
@@ -39,7 +39,6 @@ const COLORS = [
 
 // hold the scores, first selection, selection lock, and cards (divs)
 //  with removed event handlers.
-//let gameCards = '';
 let divSelectedFirst = '';
 let nbrOfMatches = 0;
 let nbrScoreYours = 0;
@@ -50,7 +49,6 @@ let divRemovedEvents = [];
 function gameReset() {
 
   // reset fields to prepare for a new game.
-  //gameCards = document.querySelectorAll("div");
   divSelectedFirst = '';
   nbrScoreYours = 0;
   nbrOfMatches = 0;
@@ -89,12 +87,14 @@ let shuffledColors = shuffle(COLORS);
 // it creates a new div and gives it a class with the value of the color
 // it also adds an event listener for a click for each card
 function createDivsForColors(colorArray) {
+  let i = 0;
   for (let color of colorArray) {
     // create a new div
     const newDiv = document.createElement("div");
 
     // give it a class attribute for the value we are looping over
-    newDiv.classList.add(color);
+    newDiv.classList.add(i);
+    i++;
 
     // call a function handleCardClick when a div is clicked on
     newDiv.addEventListener("click", handleCardClick);
@@ -108,16 +108,12 @@ function clearCardColor(inCard1, inCard2) {
 
   // function removed the color from selected cards passed 
   //  in via parameters inCard1, inCard2
-  // inCard1.style.backgroundColor = "";
-  // inCard2.style.backgroundColor = "";
 
   // Class Assumption: 
-  //   0 is the color assigned when the div is built
-  //   1 is the colorx assigned to show the selection
-  let rmvColor = inCard1.classList[1];
-  inCard1.classList.remove(rmvColor);
-  rmvColor = inCard2.classList[1];
-  inCard2.classList.remove(rmvColor);
+  //   0 is the number index for the color assigned when the div is built
+  //   1 is the color assigned to show the selection
+  inCard1.classList.remove(inCard1.classList[1]);
+  inCard2.classList.remove(inCard2.classList[1]);
 
 
   inCard1 = '';
@@ -145,7 +141,6 @@ function handleCardClick(inEvt) {
       // truthy true
       // make sure card is not already selected by checking backGround color
 
-      //if (inEvt.target.style.backgroundColor.length == 0) {
       if (!(inEvt.target.classList[1])) {
         // if classList[1] is undefined, that is falsey, and !falsey is truthy
 
@@ -158,9 +153,8 @@ function handleCardClick(inEvt) {
         nbrScoreYours += 1;
         gameScore.innerText = nbrScoreYours;
 
-        // Show the color of the second selection
-        //inEvt.target.style.backgroundColor = inEvt.target.classList[0];
-        inEvt.target.classList.add(inEvt.target.classList[0] + "x");
+        // Show the color of the second selection.
+        inEvt.target.classList.add(shuffledColors[inEvt.target.classList[0]]);
 
 
         // tried to check for match via divsSelected[0].classList === inEvt.target.classList 
@@ -168,8 +162,8 @@ function handleCardClick(inEvt) {
         //  The array approach was dropped because the overhead of an arry when only one element
         //  is stored is not needed. 
 
-        // The assumption is that the first class will ONLY contain a color. 
-        if (divSelectedFirst.classList[0] === inEvt.target.classList[0]) {
+        // The assumption is that the first class will ONLY contain the number for the color. 
+        if (shuffledColors[divSelectedFirst.classList[0]] === shuffledColors[inEvt.target.classList[0]]) {
           // they match
 
           // remove the click event from both divs to prevent them from
@@ -224,8 +218,8 @@ function handleCardClick(inEvt) {
       // This is the first selection
       divSelectedFirst = inEvt.target;
       // set the background color
-      //inEvt.target.style.backgroundColor = inEvt.target.classList[0];
-      inEvt.target.classList.add(inEvt.target.classList[0] + "x");
+      inEvt.target.classList.add(shuffledColors[inEvt.target.classList[0]]);
+
     }
   }
 }
@@ -237,23 +231,22 @@ gameButtons.addEventListener("click", function (inEvt) {
 
   if (inEvt.target.innerText === "Start New Game") {
     shuffledColors = shuffle(COLORS);
+
     // delete the current board
     gameContainer.innerHTML = "";
     createDivsForColors(shuffledColors);
     gameReset();
   } else {
     if (inEvt.target.innerText === "Restart Game") {
-      console.log(inEvt.target.innerText);
+
       // Restart of game
       // cards with the click event listener removed were
       // remembered in divRemovedEvents. Use it to add back
       // in the listeners.
-      let rmvColor;
       for (let divReset of divRemovedEvents) {
         divReset.addEventListener("click", handleCardClick);
         //divReset.style.backgroundColor = "";
-        rmvColor = divReset.classList[1];
-        divReset.classList.remove(rmvColor);
+        divReset.classList.remove(divReset.classList[1]);
       }
       gameReset();
 
@@ -286,6 +279,3 @@ document.addEventListener("DOMContentLoaded", function (inEvt) {
   }
 
 });
-
-
-
