@@ -8,14 +8,17 @@
 // X  5. Clicking the same card should not count as a match
 // X  6. Make sure quick clicking of cards will not show more than 2 cards at a
 //       time
-//    7. Add a button that when clicked will start the game
-//    8. Add a button that when clicked will restart the game once it has ended
+// X  7. Add a button that when clicked will start the game
+// X  8. Add a button that when clicked will restart the game once it has ended
 // X  9. For every guess made, increment a score variable that is displayed while
 //       the game is in play.
 // X 10. Store the lowest number game in localStorage
 //   11. Allow for any number of cards to appear.
 //   12. Instead of hard-coding colors, try something different like random colors
 //       or images.
+// X 13. Remove use of style.backgroundColor for setting color
+//   14. Place the index to shuffledColors as a div class, not the actual
+//       color name!
 
 const gameContainer = document.getElementById("game");
 const gameScore = document.getElementById("score-yours");
@@ -105,8 +108,17 @@ function clearCardColor(inCard1, inCard2) {
 
   // function removed the color from selected cards passed 
   //  in via parameters inCard1, inCard2
-  inCard1.style.backgroundColor = "";
-  inCard2.style.backgroundColor = "";
+  // inCard1.style.backgroundColor = "";
+  // inCard2.style.backgroundColor = "";
+
+  // Class Assumption: 
+  //   0 is the color assigned when the div is built
+  //   1 is the colorx assigned to show the selection
+  let rmvColor = inCard1.classList[1];
+  inCard1.classList.remove(rmvColor);
+  rmvColor = inCard2.classList[1];
+  inCard2.classList.remove(rmvColor);
+
 
   inCard1 = '';
   inCard2 = '';
@@ -133,7 +145,10 @@ function handleCardClick(inEvt) {
       // truthy true
       // make sure card is not already selected by checking backGround color
 
-      if (inEvt.target.style.backgroundColor.length == 0) {
+      //if (inEvt.target.style.backgroundColor.length == 0) {
+      if (!(inEvt.target.classList[1])) {
+        // if classList[1] is undefined, that is falsey, and !falsey is truthy
+
         // background color is not set -- this card has not been selected
         //  for the current turn.
 
@@ -144,14 +159,16 @@ function handleCardClick(inEvt) {
         gameScore.innerText = nbrScoreYours;
 
         // Show the color of the second selection
-        inEvt.target.style.backgroundColor = inEvt.target.classList[0];
+        //inEvt.target.style.backgroundColor = inEvt.target.classList[0];
+        inEvt.target.classList.add(inEvt.target.classList[0] + "x");
+
 
         // tried to check for match via divsSelected[0].classList === inEvt.target.classList 
         //  AND no and divsSelected[0].classList[0] === inEvt.target.classList[0] looked ugly
         //  The array approach was dropped because the overhead of an arry when only one element
         //  is stored is not needed. 
 
-        // The assumption is that class will ONLY contain a color. 
+        // The assumption is that the first class will ONLY contain a color. 
         if (divSelectedFirst.classList[0] === inEvt.target.classList[0]) {
           // they match
 
@@ -207,7 +224,8 @@ function handleCardClick(inEvt) {
       // This is the first selection
       divSelectedFirst = inEvt.target;
       // set the background color
-      inEvt.target.style.backgroundColor = inEvt.target.classList[0];
+      //inEvt.target.style.backgroundColor = inEvt.target.classList[0];
+      inEvt.target.classList.add(inEvt.target.classList[0] + "x");
     }
   }
 }
@@ -230,9 +248,12 @@ gameButtons.addEventListener("click", function (inEvt) {
       // cards with the click event listener removed were
       // remembered in divRemovedEvents. Use it to add back
       // in the listeners.
+      let rmvColor;
       for (let divReset of divRemovedEvents) {
         divReset.addEventListener("click", handleCardClick);
-        divReset.style.backgroundColor = "";
+        //divReset.style.backgroundColor = "";
+        rmvColor = divReset.classList[1];
+        divReset.classList.remove(rmvColor);
       }
       gameReset();
 
